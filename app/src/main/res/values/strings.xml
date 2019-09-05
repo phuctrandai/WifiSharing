@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Wifi Sharing</string>
+
+    <!-- Bottom navigation -->
+    <string name="title_discover">Discover</string>
+    <string name="title_share">Share</string>
+    <string name="title_scan">Scan</string>
+    <string name="title_saved">Saved</string>
+</resources>

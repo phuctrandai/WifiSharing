@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/srl_wifi_discovery"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <Switch
+            android:id="@+id/sbtn_wifi_toggle"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginBottom="@dimen/normal_margin"
+            android:background="@android:color/holo_blue_light"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="@dimen/big_padding"
+            android:textColor="@android:color/white"
+            android:textOff="Turn on wifi"
+            android:textOn="Turn off wifi"
+            android:textSize="@dimen/normal_text_size"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText,UnusedAttribute" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_wifi"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+</android.support.v4.widget.SwipeRefreshLayout>

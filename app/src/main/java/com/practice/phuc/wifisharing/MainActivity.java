@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.practice.phuc.wifisharing.view.fragment.DiscoveryFragment;
 import com.practice.phuc.wifisharing.view.fragment.GeneratorFragment;
@@ -30,19 +31,20 @@ public class MainActivity extends AppCompatActivity {
     private GeneratorFragment mGeneratorFragment = GeneratorFragment.newInstance(this);
     private DiscoveryFragment mDiscoveryFragment = DiscoveryFragment.newInstance(this);
 
-    private BottomNavigationView mNavigationView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.tb_main);
+        setSupportActionBar(toolbar);
+        setTitle(getString(R.string.title_discover));
 
         initBottomNavigationView();
 
         checkPermissionAndAskIfItIsNeeded(Manifest.permission.ACCESS_FINE_LOCATION);
         checkPermissionAndAskIfItIsNeeded(Manifest.permission.ACCESS_COARSE_LOCATION);
 
-        mDiscoveryFragment.scanWifi();
+//        mDiscoveryFragment.scanWifi();
     }
 
     public void checkPermissionAndAskIfItIsNeeded(String permission) {
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initBottomNavigationView(){
-        mNavigationView = findViewById(R.id.navigation);
+        BottomNavigationView mNavigationView = findViewById(R.id.navigation);
         mNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener);
         mNavigationView.setSelectedItemId(R.id.navigation_discover);
     }
@@ -100,9 +102,11 @@ public class MainActivity extends AppCompatActivity {
         switch (menuItem.getItemId()) {
             case R.id.navigation_discover:
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment, mDiscoveryFragment).commit();
+                setTitle(getString(R.string.title_discover));
                 return true;
             case R.id.navigation_share:
                 getSupportFragmentManager().beginTransaction().replace(R.id.main_fragment, mGeneratorFragment).commit();
+                setTitle(getString(R.string.title_share));
                 return true;
             default:
                 return false;

@@ -2,23 +2,33 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:foreground="?android:attr/selectableItemBackgroundBorderless"
+    android:layout_height="90dp"
+    android:background="@android:color/white"
     android:clickable="true"
     android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackgroundBorderless"
+    android:padding="@dimen/wifi_item_padding"
     tools:ignore="UnusedAttribute">
 
     <TextView
         android:id="@+id/tv_wifi_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
         android:drawableStart="@drawable/ic_wifi_black_24dp"
         android:drawablePadding="24dp"
-        android:padding="@dimen/wifi_item_padding"
         android:text="Wifi name"
         android:textColor="@android:color/black"
         android:textSize="@dimen/normal_text_size"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/tv_wifi_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_wifi_name"
+        android:paddingStart="48dp"
+        android:paddingEnd="0dp"
+        android:text="Status"
+        android:textSize="@dimen/small_text_size"
         tools:ignore="HardcodedText" />
 </RelativeLayout>

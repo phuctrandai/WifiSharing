@@ -8,6 +8,24 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.practice.phuc.wifisharing.MainActivity">
 
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/abl_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="0dp"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:elevation="0dp">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/tb_main"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/white"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:titleTextColor="@color/colorPrimary" />
+
+    </android.support.design.widget.AppBarLayout>
+
     <FrameLayout
         android:id="@+id/main_fragment"
         android:layout_width="match_parent"
@@ -25,10 +43,10 @@
         android:elevation="0dp"
         android:theme="@style/Widget.BottomNavigationView"
         app:elevation="0dp"
+        app:itemHorizontalTranslationEnabled="true"
         app:itemIconTint="@color/bnv_tab_item_foreground"
         app:itemTextColor="@color/bnv_tab_item_foreground"
-        app:labelVisibilityMode="labeled"
-        app:itemHorizontalTranslationEnabled="true"
+        app:labelVisibilityMode="selected"
         app:menu="@menu/navigation" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -2,18 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_discover"
-        android:title="@string/title_discover"/>
+        android:icon="@drawable/ic_wifi_black_24dp"
+        android:title="@string/title_discover" />
 
     <item
         android:id="@+id/navigation_share"
+        android:icon="@drawable/ic_share_black_24dp"
         android:title="@string/title_share" />
 
     <item
         android:id="@+id/navigation_scan"
+        android:icon="@drawable/ic_camera_black_24dp"
         android:title="@string/title_scan" />
 
     <item
         android:id="@+id/navigation_saved"
+        android:icon="@drawable/ic_save_black_24dp"
         android:title="@string/title_saved" />
 
 </menu>

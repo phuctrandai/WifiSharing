@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="small_text_size">12sp</dimen>
     <dimen name="normal_text_size">16sp</dimen>
     <dimen name="big_text_size">18sp</dimen>
 
     <dimen name="normal_padding">12dp</dimen>
     <dimen name="big_padding">18dp</dimen>
 
+    <dimen name="normal_margin">12dp</dimen>
+
     <dimen name="wifi_item_padding">24dp</dimen>
 
     <dimen name="main_navigation_height">55dp</dimen>
-
-    <dimen name="normal_margin">12dp</dimen>
 </resources>

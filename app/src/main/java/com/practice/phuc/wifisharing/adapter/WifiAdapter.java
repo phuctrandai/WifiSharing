@@ -3,8 +3,11 @@ package com.practice.phuc.wifisharing.adapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -13,18 +16,16 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.practice.phuc.wifisharing.R;
+import com.practice.phuc.wifisharing.constants.Constants;
 
 import java.util.List;
 
@@ -32,7 +33,18 @@ import static android.content.ContentValues.TAG;
 
 public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder> {
     private Context mContext;
+    private WifiManager mWifiManager;
     private List<ScanResult> mWifis;
+
+    private WifiManager getWifiManager() {
+        if (mWifiManager == null) {
+            mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        }
+
+        return mWifiManager;
+    }
+
+    /* Public methods region */
 
     public WifiAdapter(Context context, List<ScanResult> wiFis) {
         mWifis = wiFis;
@@ -45,7 +57,28 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder
         notifyDataSetChanged();
     }
 
-    private void connectWiFi(ScanResult scanResult, String password) {
+    public void updateConnectedWifi(String ssid, String bssid) {
+        int pos = -1;
+
+        for (int i = 0; i < mWifis.size(); i++) {
+            if (mWifis.get(i).SSID.equalsIgnoreCase(ssid)
+                    && mWifis.get(i).BSSID.equalsIgnoreCase(bssid)) {
+                pos = i;
+                break;
+            }
+        }
+
+        if (pos != -1) {
+            mWifis.remove(pos);
+            notifyItemChanged(pos);
+        }
+    }
+
+    /* End public methods region */
+
+    /* Private methods region */
+
+    private void connectWiFi(ScanResult scanResult, String password, final TextView tvConnectedWifiStatus) {
         try {
             Log.v(TAG, "Item clicked, SSID " + scanResult.SSID + " Security : " + scanResult.capabilities);
 
@@ -98,21 +131,26 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder
                 conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
             }
 
-            WifiManager wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            int netId = wifiManager.addNetwork(conf);
+            int netId = getWifiManager().addNetwork(conf);
 
             Log.v(TAG, "Add result " + netId);
 
-            wifiManager.disconnect();
-            wifiManager.enableNetwork(netId, true);
-            wifiManager.reconnect();
+            getWifiManager().disconnect();
+            boolean result = getWifiManager().enableNetwork(netId, true);
+            result = result && getWifiManager().reconnect();
+
+            if (result) {
+                tvConnectedWifiStatus.setText(Constants.WifiStatus.Connected);
+            } else {
+                tvConnectedWifiStatus.setText(Constants.WifiStatus.CanNotConnect);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void displayConnectDialog(ScanResult scanResult) {
+    private void displayConnectDialog(ScanResult scanResult, final TextView tvConnectedWifiStatus) {
         @SuppressLint("InflateParams")
         View connectDialogLayout = LayoutInflater.from(mContext).inflate(R.layout.dialog_custom_layout, null);
         final EditText etPassword = connectDialogLayout.findViewById(R.id.et_password);
@@ -126,7 +164,7 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder
 
         alert.setPositiveButton("Connect", (dialog, which) -> {
             String pass = etPassword.getText().toString();
-            connectWiFi(scanResult, pass);
+            connectWiFi(scanResult, pass, tvConnectedWifiStatus);
             dialog.dismiss();
         });
         AlertDialog dialog = alert.create();
@@ -166,13 +204,42 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder
         });
     }
 
+    private String getCurrentSsid(Context context) {
+        String ssid = null;
+        ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        if (networkInfo.isConnected()) {
+            final WifiInfo connectionInfo = getWifiManager().getConnectionInfo();
+
+            if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+                ssid = connectionInfo.getSSID();
+            }
+        }
+        return ssid;
+    }
+
+    /* End private methods region */
+
+    /* Override methods region */
+
     @Override
     public void onBindViewHolder(@NonNull WifiViewHolder wifiViewHolder, int pos) {
         wifiViewHolder.mWifiName.setText(mWifis.get(pos).SSID);
 
+        String currentSsid = getCurrentSsid(mContext);
+        String ssid = currentSsid != null ? currentSsid.substring(1, currentSsid.length() - 1) : "";
+
+        if (mWifis.get(pos).SSID.equals(ssid)) {
+            wifiViewHolder.mWifiStatus.setText(Constants.WifiStatus.Connected);
+            wifiViewHolder.mWifiStatus.refreshDrawableState();
+        } else {
+            wifiViewHolder.mWifiStatus.setVisibility(View.GONE);
+        }
+
         wifiViewHolder.setItemClickListener((view, position, isLongClick) -> {
             if (!isLongClick) {
-                displayConnectDialog(mWifis.get(pos));
+                displayConnectDialog(mWifis.get(pos), wifiViewHolder.mWifiStatus);
             }
         });
     }
@@ -191,16 +258,22 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder
         return mWifis.size() > 0 ? mWifis.size() : 0;
     }
 
+    /* End override methods region */
+
+    /* Internal classes and interfaces region */
+
     class WifiViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         private ItemClickListener mItemClickListener;
 
         private TextView mWifiName;
+        private TextView mWifiStatus;
 
         WifiViewHolder(@NonNull View itemView) {
             super(itemView);
 
             mWifiName = itemView.findViewById(R.id.tv_wifi_name);
+            mWifiStatus = itemView.findViewById(R.id.tv_wifi_status);
 
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
@@ -223,7 +296,9 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.WifiViewHolder
 
     }
 
-    public interface ItemClickListener {
+    interface ItemClickListener {
         void onClick(View view, int position, boolean isLongClick);
     }
+
+    /* End internal classes and interfaces region */
 }

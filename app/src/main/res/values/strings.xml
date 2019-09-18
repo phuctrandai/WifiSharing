@@ -6,4 +6,8 @@
     <string name="title_share">Share</string>
     <string name="title_scan">Scan</string>
     <string name="title_saved">Saved</string>
+
+    <string name="notification_turn_on_wifi">
+        Để xem các mạng có thể kết nối, hãy bật Wi-Fi.
+    </string>
 </resources>

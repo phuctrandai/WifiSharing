@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:drawableTop="@drawable/ic_signal_wifi_off_primary_64dp"
+        android:drawablePadding="@dimen/big_padding"
+        android:gravity="center"
+        android:text="@string/notification_turn_on_wifi"
+        android:textColor="@android:color/black"
+        android:textSize="@dimen/big_text_size" />
+</RelativeLayout>

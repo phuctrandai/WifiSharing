@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
@@ -21,9 +22,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.practice.phuc.wifisharing.R;
 import com.practice.phuc.wifisharing.adapter.WifiAdapter;
+import com.practice.phuc.wifisharing.constants.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +57,10 @@ public class DiscoveryFragment extends Fragment {
     private RecyclerView mWifiRecyclerView;
     private Switch mSBtnWifiToggle;
     private ProgressBar mPbWifiScanning;
+    private View mLConnectedWifi;
+    private TextView mTvWifiName;
+    private TextView mTvWifiStatus;
+    private View mLWifiDisabledNotification;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,6 +79,8 @@ public class DiscoveryFragment extends Fragment {
         initWifiRecyclerView();
 
         initWifiToggleBtn();
+
+        showWifiStatusLayout(isWifiConnected());
 
         return view;
     }
@@ -95,16 +104,22 @@ public class DiscoveryFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        mWifiScanningCount = 1;
-        mWifiScanningHandler.postDelayed(mWifiScanningRunnable = () -> {
-            mPbWifiScanning.setVisibility(View.VISIBLE);
-            mWifiScanningCount += 1;
-            scanWifi();
+        if (getWifiManager().isWifiEnabled()) {
+            showWifiDisabledNotification(false);
 
-            if (mWifiScanningCount < mMaxWifiScanningCount)
-                mWifiScanningHandler.postDelayed(mWifiScanningRunnable, mWifiScanningDelay);
+            mWifiScanningCount = 1;
+            mWifiScanningHandler.postDelayed(mWifiScanningRunnable = () -> {
+                mPbWifiScanning.setVisibility(View.VISIBLE);
+                mWifiScanningCount += 1;
+                scanWifi();
 
-        }, mWifiScanningDelay);
+                if (mWifiScanningCount < mMaxWifiScanningCount)
+                    mWifiScanningHandler.postDelayed(mWifiScanningRunnable, mWifiScanningDelay);
+
+            }, mWifiScanningDelay);
+        } else {
+            showWifiDisabledNotification(true);
+        }
     }
 
     @Override
@@ -130,11 +145,66 @@ public class DiscoveryFragment extends Fragment {
 
     /* Private methods region */
 
+    private void showWifiDisabledNotification(boolean isShow) {
+        if (isShow) {
+            mWifiRecyclerView.setVisibility(View.GONE);
+            mLWifiDisabledNotification.setVisibility(View.VISIBLE);
+        } else {
+            mWifiRecyclerView.setVisibility(View.VISIBLE);
+            mLWifiDisabledNotification.setVisibility(View.GONE);
+        }
+    }
+
+    private void showWifiStatusLayout(boolean isShow){
+        if (isShow) {
+            String rawSsid = getWifiManager().getConnectionInfo().getSSID();
+            String ssid = rawSsid.substring(1, rawSsid.length() - 1);
+
+            mTvWifiName.setText(ssid);
+            mTvWifiStatus.setText(Constants.WifiStatus.Connected);
+            mLConnectedWifi.setVisibility(View.VISIBLE);
+
+        } else {
+            mLConnectedWifi.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isWifiConnected() {
+        ConnectivityManager connManager = (ConnectivityManager) mContext.getApplicationContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+        return wifi.isConnected();
+    }
+
     private void scanSuccess() {
         List<ScanResult> results = getWifiManager().getScanResults();
 
         if (results.size() > 0) {
-            mWifiAdapter.notifyDataSetChanged(results);
+            if (isWifiConnected()) {
+                String rawSsid = getWifiManager().getConnectionInfo().getSSID();
+                String currentSsid = rawSsid.substring(1, rawSsid.length() - 1);
+                String currentBssid = getWifiManager().getConnectionInfo().getBSSID();
+
+                int size = results.size();
+                int pos = -1;
+
+                for (int i = 0; i < size; i++) {
+                    if (results.get(i).SSID.equalsIgnoreCase(currentSsid)
+                            && results.get(i).BSSID.equalsIgnoreCase(currentBssid)) {
+                        pos = i;
+                        break;
+                    }
+                }
+
+                if (pos != -1) {
+                    results.remove(pos);
+                }
+            }
+
+            if (results.size() > 0) {
+                mWifiAdapter.notifyDataSetChanged(results);
+            }
         }
     }
 
@@ -192,18 +262,18 @@ public class DiscoveryFragment extends Fragment {
 
                         } else if (wifiState == WifiManager.WIFI_STATE_ENABLED) {
                             Log.d(TAG, "Connecting Receiver: Wifi enabled");
-
                         }
                     } else if (intent.getAction().equalsIgnoreCase(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
                         NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
                         if (info != null && info.isConnected()) {
+                            showWifiStatusLayout(true);
 
-                            WifiInfo wifiInfo = getWifiManager().getConnectionInfo();
-                            String ssid = wifiInfo.getSSID().substring(1, wifiInfo.getSSID().length() - 1);
+                            String rawSsid = getWifiManager().getConnectionInfo().getSSID();
+                            String currentSsid = rawSsid.substring(1, rawSsid.length() - 1);
+                            String currentBssid = getWifiManager().getConnectionInfo().getBSSID();
+                            mWifiAdapter.updateConnectedWifi(currentSsid, currentBssid);
 
-                            mWifiAdapter.updateConnectedWifi(ssid, wifiInfo.getBSSID());
-
-                            Log.d(TAG, "Connecting Receiver: Connected to " + wifiInfo.getSSID());
+                            Log.d(TAG, "Connecting Receiver: Connected to " + currentSsid);
                         }
                     }
                 }
@@ -242,12 +312,14 @@ public class DiscoveryFragment extends Fragment {
                 getWifiManager().setWifiEnabled(true);
                 mPbWifiScanning.setVisibility(View.VISIBLE);
                 new Handler().postDelayed(this::scanWifi, 2000);
-
+                showWifiDisabledNotification(false);
             } else {
                 getWifiManager().setWifiEnabled(false);
                 mPbWifiScanning.setVisibility(View.INVISIBLE);
                 mWifiAdapter.notifyDataSetChanged(new ArrayList<>());
                 mWifiScanningHandler.removeCallbacks(mWifiScanningRunnable);
+                showWifiStatusLayout(false);
+                showWifiDisabledNotification(true);
             }
         });
     }
@@ -264,6 +336,10 @@ public class DiscoveryFragment extends Fragment {
         mWifiRecyclerView = view.findViewById(R.id.rv_wifi);
         mSBtnWifiToggle = view.findViewById(R.id.sbtn_wifi_toggle);
         mPbWifiScanning = view.findViewById(R.id.pb_wifi_scanning);
+        mLConnectedWifi = view.findViewById(R.id.layout_connected_wifi);
+        mTvWifiName = view.findViewById(R.id.tv_wifi_name);
+        mTvWifiStatus = view.findViewById(R.id.tv_wifi_status);
+        mLWifiDisabledNotification = view.findViewById(R.id.layout_wifi_disabled_notification);
     }
 
     /* End private methods region */
